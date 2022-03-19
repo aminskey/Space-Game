@@ -1,6 +1,9 @@
 import pygame
 import TextClass
+
 from pygame.locals import *
+from PlayerClass import Player
+from SpriteGroups import *
 
 pygame.init()
 
@@ -12,8 +15,6 @@ pygame.display.set_caption(name)
 FPS = 60
 clock = pygame.time.Clock()
 
-textGroup = pygame.sprite.Group()
-playersGroup = pygame.sprite.Group()
 
 def startScreen():
         bg = pygame.image.load("backgrounds/bg.png")
@@ -51,6 +52,10 @@ def startScreen():
                                 if event.key == pygame.K_UP:
                                         itr -= 1
                                 if event.key == pygame.K_RETURN:
+                                        for item in textGroup:
+                                                item.remove(textGroup)
+                                                item.kill()
+
                                         if options[itr] == start:
                                                 main()
                                                 break
@@ -64,6 +69,7 @@ def startScreen():
 
                 cursor.rect.midright = options[itr].rect.midleft
 
+
                 screen.blit(bg, (0, 0))
                 textGroup.draw(screen)
 
@@ -71,13 +77,28 @@ def startScreen():
                 clock.tick(FPS)
 
 def main():
+
+        bg = pygame.image.load("backgrounds/mainbg.png")
+        bg = pygame.transform.scale(bg, screen.get_size())
+
+        p1 = Player(screen)
+        p1.rect.midbottom = screen.get_rect().midbottom
+
+        playersGroup.add(p1)
+
         while True:
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                                 pygame.quit()
                                 exit()
 
-                screen.fill((0, 0, 0))
+                screen.blit(bg, (0, 0))
+
+                playersGroup.update(10, enemyGroup)
+                bulletGroup.update()
+
+                bulletGroup.draw(screen)
+                playersGroup.draw(screen)
 
                 pygame.display.update()
                 clock.tick(FPS)
