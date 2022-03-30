@@ -4,6 +4,7 @@ from pygame.locals import *
 class Fire(pygame.sprite.Sprite):
         def __init__(self, vulGroup, pos=(0, 0)):
                 super().__init__()
+
                 self.image = pygame.image.load("bullets/player_bullet.png")
                 self.orgBullet = self.image
                 self.rect = self.image.get_rect()
@@ -19,6 +20,7 @@ class Fire(pygame.sprite.Sprite):
 
                 self.bullet = True
                 self.vulGroup = vulGroup
+
         def update(self):
                 self.rect.centery -= self.speed
 

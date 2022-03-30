@@ -4,6 +4,7 @@ import FireClass
 from pygame.locals import *
 from SpriteGroups import *
 from random import randint
+from time import sleep
 
 class Player(pygame.sprite.Sprite):
         def __init__(self, mainWindow, model="quake"):
@@ -20,6 +21,7 @@ class Player(pygame.sprite.Sprite):
                 self.mainWindow = mainWindow
                 self.enemyGroup = None
                 self.currAngle = 0
+                self.coolDown = 0
 
         def move(self, keys):
                 if keys[K_RIGHT]:
@@ -28,33 +30,37 @@ class Player(pygame.sprite.Sprite):
                 if keys[K_LEFT]:
                         if self.rect.midleft[0] > 0:
                                 self.rect.centerx -= self.moveSpeed
-
                 if keys[K_UP]:
                         if self.rect.midtop[1] > self.mainWindow.get_height()//2:
                                 self.rect.centery -= self.moveSpeed
                 if keys[K_DOWN]:
                         if self.rect.midbottom[1] < self.mainWindow.get_height():
                                 self.rect.centery += self.moveSpeed
-
         def fire(self, keys):
-                if keys[K_SPACE]:
-                        tmpBullet = FireClass.Bullet(self.enemyGroup, (0, 0))
-                        tmpBullet.rect.midbottom = self.rect.midtop
-                        tmpBullet.add(bulletGroup)
-                if keys[K_f]:
-                        tmpBullet = FireClass.Torpedo(self.enemyGroup, (0, 0))
-                        tmpBullet.rect.midbottom = self.rect.midtop
-                        tmpBullet.add(bulletGroup)
+                if self.coolDown <= 0:
+                        if keys[K_SPACE]:
+                                tmpBullet = FireClass.Bullet(self.enemyGroup, (0, 0))
+                                tmpBullet.rect.midbottom = self.rect.midtop
+                                tmpBullet.add(bulletGroup)
+                                self.coolDown += 0.5
+                        if keys[K_f]:
+                                tmpBullet = FireClass.Torpedo(self.enemyGroup, (0, 0))
+                                tmpBullet.rect.midbottom = self.rect.midtop
+                                tmpBullet.add(bulletGroup)
+                                self.coolDown += 1
 
 
         def update(self, moveSpeed, enemyGroup):
                 keys = pygame.key.get_pressed()
+
+                self.coolDown -= 0.05
 
                 self.enemyGroup = enemyGroup
                 self.moveSpeed = moveSpeed
 
                 self.move(keys)
                 self.fire(keys)
+
 
 class EnemyShip(pygame.sprite.Sprite):
         def __init__(self, mainWindow, model="interceptor"):
@@ -71,6 +77,10 @@ class EnemyShip(pygame.sprite.Sprite):
 
                 self.pos = self.rect.center
         def dead(self):
+                tmpSound = pygame.mixer.Sound("sounds/explosion.mp3")
+                tmpSound.set_volume(0.5)
+                tmpSound.play()
+
                 self.image = self.destoryed_image
                 self.kill()
 
