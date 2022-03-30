@@ -1,5 +1,7 @@
 import pygame
+
 from pygame.locals import *
+from SpriteGroups import *
 
 class Fire(pygame.sprite.Sprite):
         def __init__(self, vulGroup, pos=(0, 0)):
@@ -20,6 +22,7 @@ class Fire(pygame.sprite.Sprite):
 
                 self.bullet = True
                 self.vulGroup = vulGroup
+                self.type = None
 
         def update(self):
                 self.rect.centery -= self.speed
@@ -35,9 +38,10 @@ class Fire(pygame.sprite.Sprite):
 
 
                 if pygame.sprite.spritecollideany(self, self.vulGroup):
-                        ship = pygame.sprite.spritecollide(self, self.vulGroup, False)[-1]
-                        ship.health -= self.damage
-                        self.kill()
+                        if self.image.get_width() <= self.orgBullet.get_width() // 2:
+                                ship = pygame.sprite.spritecollide(self, self.vulGroup, False)[-1]
+                                ship.health -= self.damage
+                                self.kill()
                 if self.rect.centery < 0:
                         self.kill()
 
@@ -51,6 +55,7 @@ class EnemyFire(Fire):
                 self.damage = 10
                 self.window = window
                 self.killVal = 400
+                self.type = "EnemyFire"
 
         def update(self):
                 self.rect.centery += self.speed
@@ -65,9 +70,19 @@ class EnemyFire(Fire):
 
 
                 if pygame.sprite.spritecollideany(self, self.vulGroup):
-                        ship = pygame.sprite.spritecollide(self, self.vulGroup, False)[-1]
-                        ship.health -= self.damage
-                        self.kill()
+                        if self.image.get_width() >= self.orgBullet.get_width() // 2:
+                                ship = pygame.sprite.spritecollide(self, self.vulGroup, False)[-1]
+                                ship.health -= self.damage
+                                self.kill()
+
+                if pygame.sprite.spritecollideany(self, bulletGroup):
+                        bullet = pygame.sprite.spritecollide(self, bulletGroup, False)[-1]
+                        if bullet.type == "PlayerBullet":
+                                bullet.remove(bulletGroup)
+                                bullet.kill()
+                                self.remove(bulletGroup)
+                                self.kill()
+
                 if self.rect.centery > self.window.get_height():
                         self.kill()
 
@@ -77,6 +92,7 @@ class Bullet(Fire):
                 self.image = pygame.image.load(bulletImage)
                 self.speed = 15
                 self.damage = 10
+                self.type = "PlayerBullet"
         pass
 
 class Torpedo(Fire):
@@ -90,4 +106,5 @@ class Torpedo(Fire):
                 self.cut = (4, 2)
                 self.killVal = 100
                 self.bullet = False
+                self.type = "PlayerTorpedo"
         pass

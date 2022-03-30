@@ -40,12 +40,12 @@ class Player(pygame.sprite.Sprite):
                 if self.coolDown <= 0:
                         if keys[K_SPACE]:
                                 tmpBullet = FireClass.Bullet(self.enemyGroup, (0, 0))
-                                tmpBullet.rect.midbottom = self.rect.midtop
+                                tmpBullet.rect.midbottom = self.rect.midbottom
                                 tmpBullet.add(bulletGroup)
                                 self.coolDown += 0.5
                         if keys[K_f]:
                                 tmpBullet = FireClass.Torpedo(self.enemyGroup, (0, 0))
-                                tmpBullet.rect.midbottom = self.rect.midtop
+                                tmpBullet.rect.midbottom = self.rect.midbottom
                                 tmpBullet.add(bulletGroup)
                                 self.coolDown += 1
 
@@ -57,6 +57,9 @@ class Player(pygame.sprite.Sprite):
 
                 self.enemyGroup = enemyGroup
                 self.moveSpeed = moveSpeed
+
+                if self.health <= 20:
+                        self.image = self.destroyed_image
 
                 self.move(keys)
                 self.fire(keys)
@@ -87,25 +90,29 @@ class EnemyShip(pygame.sprite.Sprite):
         def update(self):
                 self.itr += 0.5
 
-                self.pos = self.rect.center
+                self.pos = (self.rect.centerx, self.rect.centery + 1)
 
-                if self.image.get_width() <= self.neutral_image.get_width():
+
+                if self.image.get_width() <= self.neutral_image.get_width() or self.rect.centery >= self.mainWindow.get_height() * 7//8:
                         if self.itr % 1 == 0:
                                 self.image = pygame.transform.scale(self.neutral_image, (self.image.get_width() + 1, self.image.get_height() + 1))
                                 self.rect = self.image.get_rect()
                                 self.rect.center = self.pos
                 else:
-                        self.rect.centerx -= 5
+                        self.kill()
+
+
 
 
                 if self.health <= 0:
                         self.dead()
 
+
                 if self.rect.midright[0] < 0:
                         self.kill()
 
 
-                if self.itr % randint(50, 75) == 0:
+                if self.itr % randint(60, 75) == 0:
                         tmpBullet = FireClass.EnemyFire(playersGroup, window=self.mainWindow)
-                        tmpBullet.rect.midtop = self.rect.midbottom
+                        tmpBullet.rect.midtop = self.rect.center
                         bulletGroup.add(tmpBullet)

@@ -26,5 +26,3 @@ class Healthbar(pygame.sprite.Sprite):
                         self.image = self.states[2]
                 if 10 >= self.player.health > 0:
                         self.image = self.states[3]
-
-                print(self.player.health)

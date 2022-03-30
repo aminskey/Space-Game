@@ -9,6 +9,7 @@ from pygame.locals import *
 from ShipClass import Player
 from SpriteGroups import *
 from Healthbar import Healthbar
+from Asteroids import Asteroid
 
 pygame.init()
 
@@ -131,6 +132,9 @@ def gameOver():
         logoRect.center = (screen.get_width()//2, screen.get_height()//2)
         alphaVal = 0
 
+        pygame.mixer.music.load("songs/prototypes/gameOver.ogg")
+        pygame.mixer.music.play(-1)
+
         for item in healthbarGroup:
                 item.remove(healthbarGroup)
                 item.kill()
@@ -143,6 +147,10 @@ def gameOver():
                 item.remove(enemyGroup)
                 item.kill()
 
+        for item in asteroidsGroup:
+                item.remove(asteroidsGroup)
+                item.kill()
+
         while True:
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -150,6 +158,9 @@ def gameOver():
                                 exit()
                         if event.type == pygame.KEYDOWN:
                                 if event.key == pygame.K_RETURN:
+                                        pygame.mixer.music.stop()
+                                        pygame.mixer.music.unload()
+
                                         startScreen()
                                         exit()
                         break
@@ -167,7 +178,7 @@ def gameOver():
 
 def main():
 
-        bg = pygame.image.load("backgrounds/mainbg.png")
+        bg = pygame.image.load("backgrounds/bg-2.png")
         bg = pygame.transform.scale(bg, screen.get_size())
 
         p1 = Player(screen)
@@ -191,13 +202,23 @@ def main():
 
                 if itr % 50 == 0:
                         tmpEnemy = ShipClass.EnemyShip(screen)
-                        tmpEnemy.rect.center = (random.randint(tmpEnemy.image.get_width(), screen.get_width() - tmpEnemy.image.get_width()), random.randint(screen.get_height()//4, screen.get_height() * 3//4))
+                        tmpEnemy.rect.center = (random.randint(tmpEnemy.image.get_width(), screen.get_width() - tmpEnemy.image.get_width()), random.randint(screen.get_height()//4, screen.get_height()//2))
                         enemyGroup.add(tmpEnemy)
+                if itr % 25:
+                        tmpAst = Asteroid(screen)
+                        tmpAst.rect.center = (random.randint(tmpAst.image.get_width(), screen.get_width() - tmpAst.image.get_width()), random.randint(0, screen.get_height()//2))
+                        asteroidsGroup.add(tmpAst)
 
-                if len(enemyGroup.sprites()) > 30:
-                        sprite = enemyGroup.sprites()[1]
+                if len(enemyGroup.sprites()) > 15:
+                        sprite = enemyGroup.sprites()[-1]
                         sprite.remove(enemyGroup)
                         sprite.kill()
+
+                if len(asteroidsGroup.sprites()) > 5:
+                        sprite = asteroidsGroup.sprites()[-1]
+                        sprite.remove(asteroidsGroup)
+                        sprite.kill()
+
 
                 if p1.health <= 0:
                         pygame.mixer.music.stop()
@@ -211,8 +232,9 @@ def main():
                 playersGroup.update(10, enemyGroup)
                 bulletGroup.update()
                 healthbarGroup.update()
+                asteroidsGroup.update()
 
-
+                asteroidsGroup.draw(screen)
                 enemyGroup.draw(screen)
                 bulletGroup.draw(screen)
                 playersGroup.draw(screen)
