@@ -1,6 +1,6 @@
 import pygame
 
-from SpriteGroups import *
+from PublicVar import *
 from pygame.locals import *
 
 class Asteroid(pygame.sprite.Sprite):
@@ -11,7 +11,7 @@ class Asteroid(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
 
                 self.rect.center = pos
-                self.speed = 1
+                self.speed = 2
                 self.window = window
         def update(self):
 
@@ -19,6 +19,8 @@ class Asteroid(pygame.sprite.Sprite):
 
                 if self.rect.midleft[0] > self.window.get_width():
                         self.rect.midright = (0, self.rect.midleft[1])
+                if self.rect.midright[0] < 0:
+                        self.rect.midleft = (self.window.get_width(), self.rect.centery)
 
 
 class Line(pygame.sprite.Sprite):

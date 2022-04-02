@@ -1,6 +1,7 @@
 import pygame
-from pygame.locals import *
 
+from pygame.locals import *
+from TextClass import Text
 class Healthbar(pygame.sprite.Sprite):
         def __init__(self, player):
                 super().__init__()
@@ -18,6 +19,7 @@ class Healthbar(pygame.sprite.Sprite):
 
         def update(self):
 
+
                 if 100 >= self.player.health > 70:
                         self.image = self.states[0]
                 if 70 >= self.player.health > 40:
@@ -26,3 +28,4 @@ class Healthbar(pygame.sprite.Sprite):
                         self.image = self.states[2]
                 if 10 >= self.player.health > 0:
                         self.image = self.states[3]
+

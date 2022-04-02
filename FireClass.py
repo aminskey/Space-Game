@@ -1,7 +1,7 @@
 import pygame
 
 from pygame.locals import *
-from SpriteGroups import *
+from PublicVar import *
 
 class Fire(pygame.sprite.Sprite):
         def __init__(self, vulGroup, pos=(0, 0)):

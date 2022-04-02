@@ -2,7 +2,7 @@ import pygame
 import FireClass
 
 from pygame.locals import *
-from SpriteGroups import *
+from PublicVar import *
 from random import randint
 from time import sleep
 
@@ -53,7 +53,8 @@ class Player(pygame.sprite.Sprite):
         def update(self, moveSpeed, enemyGroup):
                 keys = pygame.key.get_pressed()
 
-                self.coolDown -= 0.05
+                if self.coolDown >= -1:
+                        self.coolDown -= 0.05
 
                 self.enemyGroup = enemyGroup
                 self.moveSpeed = moveSpeed
@@ -77,6 +78,7 @@ class EnemyShip(pygame.sprite.Sprite):
                 self.health = 50
                 self.mainWindow = mainWindow
                 self.itr = 0
+                self.scorePoints = 20
 
                 self.pos = self.rect.center
         def dead(self):
@@ -88,6 +90,7 @@ class EnemyShip(pygame.sprite.Sprite):
                 self.kill()
 
         def update(self):
+
                 self.itr += 0.5
 
                 self.pos = (self.rect.centerx, self.rect.centery + 1)
@@ -101,18 +104,14 @@ class EnemyShip(pygame.sprite.Sprite):
                 else:
                         self.kill()
 
-
-
-
                 if self.health <= 0:
                         self.dead()
-
 
                 if self.rect.midright[0] < 0:
                         self.kill()
 
 
-                if self.itr % randint(60, 75) == 0:
+                if self.itr % randint(80, 95) == 0:
                         tmpBullet = FireClass.EnemyFire(playersGroup, window=self.mainWindow)
                         tmpBullet.rect.midtop = self.rect.center
                         bulletGroup.add(tmpBullet)

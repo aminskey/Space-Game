@@ -7,9 +7,10 @@ import ExtraClass
 
 from pygame.locals import *
 from ShipClass import Player
-from SpriteGroups import *
+from PublicVar import *
 from Healthbar import Healthbar
 from Asteroids import Asteroid
+from LevelsClass import Level
 
 pygame.init()
 
@@ -23,6 +24,11 @@ clock = pygame.time.Clock()
 
 ExtraClass.scanlineGen(1, screen)
 
+levels = [
+        Level(screen, "backgrounds/bg-3.png", "songs/prototypes/bg-2.ogg", ("backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png", "backgroundObjects/airship.png")),
+        Level(screen, "backgrounds/bg-2.png", "songs/prototypes/bg.ogg", ("backgroundObjects/asteroid-0.png", "backgroundObjects/planet.png", "backgroundObjects/ship-1.png"))
+]
+
 def startScreen():
         pygame.mixer.music.load("songs/prototypes/startups/startup.ogg")
         pygame.mixer.music.play(-1)
@@ -33,6 +39,9 @@ def startScreen():
         for i in range(10):
                 tmpAsteroid = ExtraClass.Asteroid(screen)
                 tmpAsteroid.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
+                tmpAsteroid.image = pygame.transform.scale(tmpAsteroid.image, (tmpAsteroid.image.get_width() - 30, tmpAsteroid.image.get_height() - 30))
+
+                tmpAsteroid.speed = random.randint(-3, 2)
 
                 if pygame.sprite.spritecollideany(tmpAsteroid, asteroidsGroup1):
                         tmpAsteroid.kill()
@@ -42,11 +51,25 @@ def startScreen():
         for i in range(10):
                 tmpAsteroid = ExtraClass.Asteroid(screen)
                 tmpAsteroid.rect.center = (random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
+                tmpAsteroid.speed = random.randint(2, 4)
 
                 if pygame.sprite.spritecollideany(tmpAsteroid, asteroidsGroup1):
                         tmpAsteroid.kill()
                 else:
                         tmpAsteroid.add(asteroidsGroup2)
+
+
+        asteroidGroups = [asteroidsGroup1, asteroidsGroup2]
+
+        for i in range(5):
+                main_sprite = asteroidGroups[random.randint(0, 1)].sprites()[i]
+                main_sprite.speed = random.randint(1, 2)
+                pos = main_sprite.rect.center
+
+                main_sprite.image = pygame.image.load("backgroundObjects/ship-" + str(random.randint(0, 1)) + ".png")
+                main_sprite.rect = main_sprite.image.get_rect()
+
+                main_sprite.rect.center = pos
 
 
         bg = pygame.image.load("backgrounds/bg.png")
@@ -93,13 +116,7 @@ def startScreen():
                                                 item.kill()
 
                                         if options[itr] == start:
-                                                pygame.mixer.music.stop()
-                                                pygame.mixer.music.unload()
-
-                                                pygame.mixer.music.load("songs/prototypes/bg.ogg")
-                                                pygame.mixer.music.play(-1, 0.5)
-
-                                                main()
+                                                main(levels[random.randint(0, len(levels)-1)])
                                                 break
                                         if options[itr] == quit:
                                                 exit()
@@ -135,19 +152,19 @@ def gameOver():
         pygame.mixer.music.load("songs/prototypes/gameOver.ogg")
         pygame.mixer.music.play(-1)
 
-        for item in healthbarGroup:
+        for item in healthbarGroup.sprites():
                 item.remove(healthbarGroup)
                 item.kill()
 
-        for item in playersGroup:
+        for item in playersGroup.sprites():
                 item.remove(playersGroup)
                 item.kill()
 
-        for item in enemyGroup:
+        for item in enemyGroup.sprites():
                 item.remove(enemyGroup)
                 item.kill()
 
-        for item in asteroidsGroup:
+        for item in asteroidsGroup.sprites():
                 item.remove(asteroidsGroup)
                 item.kill()
 
@@ -176,10 +193,13 @@ def gameOver():
                 clock.tick(30)
 
 
-def main():
+def main(level):
 
-        bg = pygame.image.load("backgrounds/bg-2.png")
-        bg = pygame.transform.scale(bg, screen.get_size())
+        pygame.mixer.music.stop()
+        pygame.mixer.music.unload()
+
+        pygame.mixer.music.load(level.bgSong)
+        pygame.mixer.music.play(-1)
 
         p1 = Player(screen)
         p1.rect.midbottom = (screen.get_rect().midbottom[0], screen.get_rect().midbottom[1] - 100)
@@ -191,10 +211,22 @@ def main():
 
         p1HealthBar.add(healthbarGroup)
 
+        font = pygame.font.Font("fonts/pixelart.ttf", 25)
+        scoreFont = pygame.font.Font("fonts/pixelart.ttf", 50)
+
+        playerScore = 0
+
         itr = 0
 
         while True:
                 itr += 1
+
+                scoreText1 = TextClass.Text(str(playerScore), scoreFont, (255, 255, 255))
+                scoreText2 = TextClass.Text("Score:", scoreFont, (255, 255, 255))
+
+                scoreText1.rect.bottomright = (screen.get_width(), screen.get_height())
+                scoreText2.rect.midright = scoreText1.rect.midleft
+
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                                 pygame.quit()
@@ -204,12 +236,21 @@ def main():
                         tmpEnemy = ShipClass.EnemyShip(screen)
                         tmpEnemy.rect.center = (random.randint(tmpEnemy.image.get_width(), screen.get_width() - tmpEnemy.image.get_width()), random.randint(screen.get_height()//4, screen.get_height()//2))
                         enemyGroup.add(tmpEnemy)
+
                 if itr % 25:
-                        tmpAst = Asteroid(screen)
+                        speed = 0
+                        img = level.objects[0]
+                        if len(asteroidsGroup.sprites()) % 10 == 0:
+                                img = level.objects[random.randint(1, 2)]
+                                speed = random.randint(1, 3)
+
+                        tmpAst = Asteroid(screen, img)
+                        tmpAst.speed = speed
+                        tmpAst.direction = random.randint(-2, 2)
                         tmpAst.rect.center = (random.randint(tmpAst.image.get_width(), screen.get_width() - tmpAst.image.get_width()), random.randint(0, screen.get_height()//2))
                         asteroidsGroup.add(tmpAst)
 
-                if len(enemyGroup.sprites()) > 15:
+                if len(enemyGroup.sprites()) > 5:
                         sprite = enemyGroup.sprites()[-1]
                         sprite.remove(enemyGroup)
                         sprite.kill()
@@ -219,6 +260,10 @@ def main():
                         sprite.remove(asteroidsGroup)
                         sprite.kill()
 
+                for enemy in enemyGroup.sprites():
+                        if enemy.health <= 0:
+                                playerScore += enemy.scorePoints
+
 
                 if p1.health <= 0:
                         pygame.mixer.music.stop()
@@ -226,7 +271,7 @@ def main():
 
                         gameOver()
 
-                screen.blit(bg, (0, 0))
+                screen.blit(level.background, (0, 0))
 
                 enemyGroup.update()
                 playersGroup.update(10, enemyGroup)
@@ -234,11 +279,19 @@ def main():
                 healthbarGroup.update()
                 asteroidsGroup.update()
 
+                p1HealthPrcnt = TextClass.Text(str(p1.health) + '%', font, (255, 255, 255))
+                p1HealthPrcnt.rect.center = p1HealthBar.rect.center
+
                 asteroidsGroup.draw(screen)
                 enemyGroup.draw(screen)
                 bulletGroup.draw(screen)
                 playersGroup.draw(screen)
                 healthbarGroup.draw(screen)
+
+                screen.blit(p1HealthPrcnt.image, p1HealthPrcnt.rect)
+                screen.blit(scoreText1.image, scoreText1.rect)
+                screen.blit(scoreText2.image, scoreText2.rect)
+
                 scanlineGroup.draw(screen)
 
                 pygame.display.update()
