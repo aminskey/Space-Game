@@ -1,4 +1,5 @@
 import pygame
+import cv2
 
 from PublicVar import *
 from pygame.locals import *
@@ -34,9 +35,28 @@ class Line(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.topleft = pos
 
+def return_frames(window, gif):
+        video = cv2.VideoCapture(gif)
+        dimensions = video.read()[1].shape[1::-1]
+
+        frames = []
+
+        ret = True
+        while ret:
+                ret, frame = video.read()
+
+                if not ret:
+                        break
+
+                img = pygame.image.frombuffer(frame, dimensions, "BGR")
+                img = pygame.transform.scale(img, window.get_size())
+
+                frames.append(img)
+        return frames
+
+
 
 def scanlineGen(thickness, mainWindow):
         for i in range(mainWindow.get_height()//thickness):
                 tmpLine = Line(thickness, (0, 0, 0), 150, (0, i*thickness*2), mainWindow)
                 scanlineGroup.add(tmpLine)
-

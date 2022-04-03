@@ -86,7 +86,6 @@ class EnemyShip(pygame.sprite.Sprite):
                 tmpSound.set_volume(0.5)
                 tmpSound.play()
 
-                self.image = self.destoryed_image
                 self.kill()
 
         def update(self):
@@ -98,7 +97,7 @@ class EnemyShip(pygame.sprite.Sprite):
 
                 if self.image.get_width() <= self.neutral_image.get_width() or self.rect.centery >= self.mainWindow.get_height() * 7//8:
                         if self.itr % 1 == 0:
-                                self.image = pygame.transform.scale(self.neutral_image, (self.image.get_width() + 1, self.image.get_height() + 1))
+                                self.image = pygame.transform.scale(self.neutral_image, (self.image.get_width() + 2, self.image.get_height() + 1))
                                 self.rect = self.image.get_rect()
                                 self.rect.center = self.pos
                 else:
@@ -106,6 +105,8 @@ class EnemyShip(pygame.sprite.Sprite):
 
                 if self.health <= 0:
                         self.dead()
+                if self.health <= 10:
+                        self.image = self.destoryed_image
 
                 if self.rect.midright[0] < 0:
                         self.kill()
