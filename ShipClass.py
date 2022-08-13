@@ -41,12 +41,14 @@ class Player(pygame.sprite.Sprite):
                         if keys[K_SPACE]:
                                 tmpBullet = FireClass.Bullet(self.enemyGroup, (0, 0))
                                 tmpBullet.rect.midbottom = self.rect.midbottom
+                                tmpBullet.sender = self
                                 tmpBullet.add(bulletGroup)
                                 self.coolDown += 0.5
                         if keys[K_f]:
                                 tmpBullet = FireClass.Torpedo(self.enemyGroup, (0, 0))
                                 tmpBullet.rect.midbottom = self.rect.midbottom
                                 tmpBullet.add(bulletGroup)
+                                tmpBullet.sender = self
                                 self.coolDown += 1
 
 
@@ -81,6 +83,7 @@ class EnemyShip(pygame.sprite.Sprite):
                 self.scorePoints = 20
 
                 self.pos = self.rect.center
+                self.canFire = True
         def dead(self):
                 tmpSound = pygame.mixer.Sound("sounds/explosion.mp3")
                 tmpSound.set_volume(0.5)
@@ -105,14 +108,16 @@ class EnemyShip(pygame.sprite.Sprite):
 
                 if self.health <= 0:
                         self.dead()
-                if self.health <= 10:
                         self.image = self.destoryed_image
+                        self.canFire = False
+                        self.health -= 0.05
 
                 if self.rect.midright[0] < 0:
                         self.kill()
 
 
-                if self.itr % randint(80, 95) == 0:
-                        tmpBullet = FireClass.EnemyFire(playersGroup, window=self.mainWindow)
-                        tmpBullet.rect.midtop = self.rect.center
-                        bulletGroup.add(tmpBullet)
+                if self.itr % randint(40, 65) == 0:
+                        if self.canFire:
+                                tmpBullet = FireClass.EnemyFire(playersGroup, window=self.mainWindow)
+                                tmpBullet.rect.midtop = self.rect.center
+                                bulletGroup.add(tmpBullet)

@@ -23,6 +23,7 @@ class Fire(pygame.sprite.Sprite):
                 self.bullet = True
                 self.vulGroup = vulGroup
                 self.type = None
+                self.sender = None
 
         def update(self):
                 self.rect.centery -= self.speed
@@ -88,7 +89,7 @@ class EnemyFire(Fire):
 
 class Bullet(Fire):
         def __init__(self, vulGroup, pos, bulletImage="bullets/player_bullet.png"):
-                super().__init__(vulGroup)
+                super().__init__(vulGroup, pos)
                 self.image = pygame.image.load(bulletImage)
                 self.speed = 15
                 self.damage = 10

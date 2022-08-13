@@ -4,6 +4,7 @@ import ShipClass
 import TextClass
 import random
 import ExtraClass
+import Powerups
 
 from pygame.locals import *
 from ShipClass import Player
@@ -18,7 +19,7 @@ pygame.init()
 name = "Space Raiders"
 subtitle = "Alpha 1.0"
 
-screen = pygame.display.set_mode((1100, 800))
+screen = pygame.display.set_mode((1100, 800), FULLSCREEN | SCALED)
 pygame.display.set_caption(name + " - " + subtitle)
 
 FPS = 60
@@ -27,11 +28,16 @@ clock = pygame.time.Clock()
 ExtraClass.scanlineGen(1, screen)
 
 levels = [
-        Level(screen, 5, 3, 1, "Sky High", "backgrounds/bg-3.png", "songs/prototypes/bg-2.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/sky_dash.png", "backgroundObjects/sky_dash.png"], ["interceptor", "bomber"]),
-        Level(screen, 5, 5, 3, "Ring War", "backgrounds/bg-2.png", "songs/prototypes/bg.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/planet.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"])
+        Level(screen, 5, 3, 1, "Sky High", "backgrounds/bg-3.png", "songs/prototypes/bg-2.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png", "backgroundObjects/airship.png"], ["interceptor", "bomber"]),
+        Level(screen, 5, 5, 3, "Ring War", "backgrounds/bg-2.png", "songs/prototypes/bg.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/planet.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"]),
+	Level(screen, 5, 5, 3, "Alien Planet", "backgrounds/alien_planet.png", "songs/prototypes/alien_planet.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"])
 ]
 
 select_screen = ExtraClass.return_frames(screen, "backgrounds/levelSelect.gif")
+
+with open("files/rnd.txt") as f:
+        lines = f.readlines()
+        f.close()
 
 def levelSelect(list):
 
@@ -53,37 +59,41 @@ def levelSelect(list):
         preview = Window((screen.get_width()//5, screen.get_height()//5))
         preview.rect.center = (screen.get_rect().centerx, screen.get_height()//3)
 
-        dscWin = Window ((screen.get_width(), screen.get_height()//3), image="misc/window.png")
+        dscWin = Window((screen.get_width(), screen.get_height()//3))
         dscWin.rect.bottomleft = (0, screen.get_height())
 
+
+        dscbg = pygame.transform.scale(pygame.image.load("misc/window.png"), dscWin.image.get_size())
+
         levelFont = pygame.font.Font("fonts/pixelart.ttf", 50)
-        header = pygame.font.Font("fonts/segaArt.ttf", 100)
+        header = pygame.font.Font("fonts/ka1.ttf", 100)
         description = pygame.font.Font("fonts/vga_437.ttf", 25)
 
         title = TextClass.Text("Select  Level", header, (100, 150, 100))
         title.rect.midtop = screen.get_rect().midtop
 
-        tmptext = TextClass.Text(" * No Description.....", description, (255, 255, 255))
-        tmptext2 = TextClass.Text(" * More To Come......", description, (255, 255, 255))
-        cursor = TextClass.Text("A", description, (255, 255, 255))
 
-        tmptext.rect.topleft = (10, 10)
-        tmptext2.rect.topleft = tmptext.rect.bottomleft
+        textLines = []
+        global lines
 
-        cursor.rect.midleft = tmptext2.rect.midright
+        for item in lines:
+                line = TextClass.Text(item, description, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+                textLines.append(line)
 
-        cursor.image.fill((255, 255, 255))
+        textLines[0].rect.topleft = (dscWin.image.get_width() * 5//8 - 20, 10)
 
-        dscWin.image.blit(tmptext.image, tmptext.rect)
-        dscWin.image.blit(tmptext2.image, tmptext2.rect)
+        messages = [
+                TextClass.Text(" * Processing Ship....", description, (255, 255, 255)),
+                TextClass.Text(" * Generating Enemies....", description, (255, 255, 255)),
+                TextClass.Text(" * Generating bgSong....", description, (255, 255, 255)),
+                TextClass.Text(" * Loading Ship with weapons....", description, (255, 255, 255)),
+                TextClass.Text(" * Preparing Asteroids....", description, (255, 255, 255)),
+                TextClass.Text(" * Your Game Is Now Ready....", description, (255, 255, 255))
+        ]
 
-        cursorItr = 0
-        cursorOn = True
-        values = [True, False]
-        i = 0
+        msgItr = 0
 
         while True:
-                cursorItr += 1
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                                 pygame.quit()
@@ -108,6 +118,28 @@ def levelSelect(list):
                 levelTitle = TextClass.Text(level.name, levelFont, (255, 255, 255))
                 levelTitle.rect.midtop = preview.rect.midbottom
 
+                tmptext = TextClass.Text(" * Current Level: " + level.name + ".....", description, (255, 255, 255))
+                tmptext.rect.topleft = (10, 10)
+
+                dscWin.image.blit(dscbg, (0, 0))
+                dscWin.image.blit(tmptext.image, tmptext.rect)
+
+                if msgItr > len(messages) - 1:
+                        msgItr = 0
+
+                messages[int(msgItr)].rect.topleft = tmptext.rect.bottomleft
+                dscWin.image.blit(messages[int(msgItr)].image, messages[int(msgItr)].rect)
+
+                textLines[0].rect.centery -= len(select_screen)//2
+
+                for i in range(len(textLines)):
+                        if i == 0:
+                                continue
+                        textLines[i].rect.topleft = textLines[i - 1].rect.bottomleft
+
+                for item in textLines:
+                        dscWin.image.blit(item.image, item.rect)
+
                 currentBG = level.background
                 currentBG = pygame.transform.scale(currentBG, preview.image.get_size())
                 preview.image.blit(currentBG, (0, 0))
@@ -115,20 +147,7 @@ def levelSelect(list):
                 if gifItr > len(select_screen) - 1:
                         gifItr = 0
 
-                if cursorItr % 5 == 0:
-                        i += 1
-                if i > len(values) - 1:
-                        i = 0
-
-                if cursorOn:
-                        cursor.image.set_alpha(255)
-                else:
-                        cursor.image.set_alpha(0)
-
-
                 bg = select_screen[gifItr]
-
-                dscWin.image.blit(cursor.image, cursor.rect)
 
                 screen.blit(bg, (0, 0))
                 screen.blit(shade.image, shade.rect)
@@ -143,6 +162,7 @@ def levelSelect(list):
                 clock.tick(30)
 
                 gifItr += 1
+                msgItr += 0.01
 
 def startScreen():
         pygame.mixer.music.load("songs/prototypes/startups/startup.ogg")
@@ -337,6 +357,8 @@ def main(level):
 
         p1HealthBar.add(healthbarGroup)
 
+        playerDistance = 0
+
         font = pygame.font.Font("fonts/pixelart.ttf", 25)
         scoreFont = pygame.font.Font("fonts/pixelart.ttf", 50)
 
@@ -348,10 +370,16 @@ def main(level):
                 itr += 1
 
                 scoreText1 = TextClass.Text(str(playerScore), scoreFont, (255, 255, 255))
-                scoreText2 = TextClass.Text("Score:", scoreFont, (255, 255, 255))
+                scoreText2 = TextClass.Text("Score: ", scoreFont, (255, 255, 255))
+
+                distanceText1 = TextClass.Text("Distance: ", scoreFont, (255, 255, 255))
+                distanceText2 = TextClass.Text(str(playerDistance), scoreFont, (255, 255, 255))
 
                 scoreText1.rect.bottomright = (screen.get_width(), screen.get_height())
                 scoreText2.rect.midright = scoreText1.rect.midleft
+
+                distanceText1.rect.topright = (screen.get_width()//2, 0)
+                distanceText2.rect.midleft = distanceText1.rect.midright
 
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -367,14 +395,22 @@ def main(level):
                         speed = 0
                         img = level.objects[0]
                         if len(asteroidsGroup.sprites()) % 10 == 0:
-                                img = level.objects[random.randint(1, 2)]
-                                speed = random.randint(1, 3)
+                                img = level.objects[random.randint(1, len(level.objects))]
+                                speed = random.randint(-10, 10)
 
                         tmpAst = Asteroid(screen, img, level.maxAsteroidSize)
                         tmpAst.speed = speed
                         tmpAst.direction = random.randint(-2, 2)
                         tmpAst.rect.center = (random.randint(tmpAst.image.get_width(), screen.get_width() - tmpAst.image.get_width()), random.randint(0, screen.get_height()//2))
                         asteroidsGroup.add(tmpAst)
+
+                if playerDistance % 1000 == 0 and playerDistance != 0:
+                        pUp = Powerups.OneUp(screen)
+                        pUp.rect.center = (
+                                random.randint(pUp.image.get_width(), screen.get_width() - pUp.image.get_width()),
+                                random.randint(0, screen.get_height() // 2)
+                        )
+                        powerUpGroup.add(pUp)
 
                 if len(enemyGroup.sprites()) > level.maxEnemies:
                         sprite = enemyGroup.sprites()[-1]
@@ -397,6 +433,8 @@ def main(level):
 
                         gameOver()
 
+                playerDistance += asteroidsGroup.sprites()[-1].add
+
                 screen.blit(level.background, (0, 0))
 
                 enemyGroup.update()
@@ -404,11 +442,13 @@ def main(level):
                 bulletGroup.update()
                 healthbarGroup.update()
                 asteroidsGroup.update()
+                powerUpGroup.update()
 
                 p1HealthPrcnt = TextClass.Text(str(p1.health) + '%', font, (255, 255, 255))
                 p1HealthPrcnt.rect.center = p1HealthBar.rect.center
 
                 asteroidsGroup.draw(screen)
+                powerUpGroup.draw(screen)
                 enemyGroup.draw(screen)
                 bulletGroup.draw(screen)
                 playersGroup.draw(screen)
@@ -418,6 +458,8 @@ def main(level):
                 screen.blit(scoreText1.image, scoreText1.rect)
                 screen.blit(scoreText2.image, scoreText2.rect)
 
+                screen.blit(distanceText1.image, distanceText1.rect)
+                screen.blit(distanceText2.image, distanceText2.rect)
                 scanlineGroup.draw(screen)
 
                 pygame.display.update()
