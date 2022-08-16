@@ -17,7 +17,7 @@ from windowClass import Window
 pygame.init()
 
 name = "Space Raiders"
-subtitle = "Alpha 1.0"
+subtitle = "Alpha 1.5"
 
 screen = pygame.display.set_mode((1100, 800), FULLSCREEN | SCALED)
 pygame.display.set_caption(name + " - " + subtitle)
@@ -28,12 +28,16 @@ clock = pygame.time.Clock()
 ExtraClass.scanlineGen(1, screen)
 
 levels = [
-        Level(screen, 5, 3, 1, "Sky High", "backgrounds/bg-3.png", "songs/prototypes/bg-2.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png", "backgroundObjects/airship.png"], ["interceptor", "bomber"]),
+        Level(screen, 5, 2, 0.25, "Sky High", "backgrounds/bg-3.png", "songs/prototypes/bg-2.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png", "backgroundObjects/airship.png"], ["rocket"]),
         Level(screen, 5, 5, 3, "Ring War", "backgrounds/bg-2.png", "songs/prototypes/bg.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/planet.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"]),
-	Level(screen, 5, 5, 3, "Alien Planet", "backgrounds/alien_planet.png", "songs/prototypes/alien_planet.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"])
+	Level(screen, 5, 5, 3, "Alien Planet", "backgrounds/alien_planet.png", "songs/prototypes/alien_planet.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber", "rocket"]),
+        Level(screen, 5, 2, 0.25, "Ocean Planet", "backgrounds/ocean_surface.png", "songs/prototypes/ocean.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png"], ["interceptor", "bomber", "rocket"]),
+        Level(screen, 5, 5, 3, "Atmosphere", "backgrounds/earth.png", "songs/prototypes/orbit.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "rocket"])
 ]
 
 select_screen = ExtraClass.return_frames(screen, "backgrounds/levelSelect.gif")
+
+highscore = 60
 
 with open("files/rnd.txt") as f:
         lines = f.readlines()
@@ -197,7 +201,7 @@ def startScreen():
         asteroidGroups = [asteroidsGroup1, asteroidsGroup2]
 
         for i in range(5):
-                main_sprite = asteroidGroups[random.randint(0, 1)].sprites()[i]
+                main_sprite = asteroidGroups[random.randint(0, len(asteroidGroups) - 1)].sprites()[i]
                 main_sprite.speed = random.randint(1, 2)
                 pos = main_sprite.rect.center
 
@@ -288,15 +292,31 @@ def startScreen():
 
                 pygame.display.update()
                 clock.tick(FPS)
-def gameOver():
+def gameOver(playerScore):
 
-        logo = pygame.image.load("misc/gameOver.png")
+        if playerScore < highscore:
+                pygame.mixer.music.load("songs/prototypes/gameOver-1.ogg")
+                color = (50, 50, 50)
+                gameOverFile = "misc/gameOver-1.png"
+        else:
+                pygame.mixer.music.load("songs/prototypes/gameOver-2.ogg")
+                color = (150, 150, 255)
+                gameOverFile = "misc/gameOver-2.png"
+
+        pygame.mixer.music.play(-1)
+
+        logo = pygame.image.load(gameOverFile)
         logoRect = logo.get_rect()
-        logoRect.center = (screen.get_width()//2, screen.get_height()//2)
+        logoRect.center = (screen.get_width() // 2, screen.get_height() // 2)
         alphaVal = 0
 
-        pygame.mixer.music.load("songs/prototypes/gameOver.ogg")
-        pygame.mixer.music.play(-1)
+        scoreFont = pygame.font.Font("fonts/pixelart.ttf", 50)
+
+        scoreText = TextClass.Text("Score: " + str(playerScore), scoreFont, (255, 255, 255))
+        recText = TextClass.Text("Highscore: " + str(highscore), scoreFont, (255, 255, 255))
+
+        scoreText.rect.midtop = logoRect.midbottom
+        recText.rect.midtop = scoreText.rect.midbottom
 
         for item in healthbarGroup.sprites():
                 item.remove(healthbarGroup)
@@ -315,6 +335,7 @@ def gameOver():
                 item.kill()
 
         while True:
+                screen.fill(color)
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                                 pygame.quit()
@@ -332,8 +353,12 @@ def gameOver():
                         alphaVal += 1
 
                 logo.set_alpha(alphaVal)
+                scoreText.image.set_alpha(alphaVal)
+                recText.image.set_alpha(alphaVal)
 
                 screen.blit(logo, logoRect)
+                screen.blit(scoreText.image, scoreText.rect)
+                screen.blit(recText.image, recText.rect)
 
                 pygame.display.flip()
                 clock.tick(30)
@@ -365,6 +390,7 @@ def main(level):
         playerScore = 0
 
         itr = 0
+        global highscore
 
         while True:
                 itr += 1
@@ -372,11 +398,17 @@ def main(level):
                 scoreText1 = TextClass.Text(str(playerScore), scoreFont, (255, 255, 255))
                 scoreText2 = TextClass.Text("Score: ", scoreFont, (255, 255, 255))
 
+                hs1 = TextClass.Text("Highscore: ", scoreFont, (255, 255, 255))
+                hs2 = TextClass.Text(str(highscore), scoreFont, (255, 255, 255))
+
                 distanceText1 = TextClass.Text("Distance: ", scoreFont, (255, 255, 255))
                 distanceText2 = TextClass.Text(str(playerDistance), scoreFont, (255, 255, 255))
 
                 scoreText1.rect.bottomright = (screen.get_width(), screen.get_height())
                 scoreText2.rect.midright = scoreText1.rect.midleft
+
+                hs1.rect.bottomright = scoreText2.rect.topright
+                hs2.rect.bottomright = scoreText1.rect.topright
 
                 distanceText1.rect.topright = (screen.get_width()//2, 0)
                 distanceText2.rect.midleft = distanceText1.rect.midright
@@ -385,9 +417,12 @@ def main(level):
                         if event.type == pygame.QUIT:
                                 pygame.quit()
                                 exit()
+                if playerScore >= highscore:
+                        highscore = playerScore
+
 
                 if itr % 50 == 0:
-                        tmpEnemy = ShipClass.EnemyShip(screen, model=level.enemyModels[random.randint(0, 1)])
+                        tmpEnemy = ShipClass.EnemyShip(screen, model=level.enemyModels[random.randint(0, len(level.enemyModels) - 1)])
                         tmpEnemy.rect.center = (random.randint(tmpEnemy.image.get_width(), screen.get_width() - tmpEnemy.image.get_width()), random.randint(screen.get_height()//4, screen.get_height()//2))
                         enemyGroup.add(tmpEnemy)
 
@@ -395,7 +430,7 @@ def main(level):
                         speed = 0
                         img = level.objects[0]
                         if len(asteroidsGroup.sprites()) % 10 == 0:
-                                img = level.objects[random.randint(1, len(level.objects))]
+                                img = level.objects[random.randint(1, len(level.objects) - 1)]
                                 speed = random.randint(-10, 10)
 
                         tmpAst = Asteroid(screen, img, level.maxAsteroidSize)
@@ -404,7 +439,7 @@ def main(level):
                         tmpAst.rect.center = (random.randint(tmpAst.image.get_width(), screen.get_width() - tmpAst.image.get_width()), random.randint(0, screen.get_height()//2))
                         asteroidsGroup.add(tmpAst)
 
-                if playerDistance % 1000 == 0 and playerDistance != 0:
+                if playerDistance % 500 == 0 and playerDistance != 0:
                         pUp = Powerups.OneUp(screen)
                         pUp.rect.center = (
                                 random.randint(pUp.image.get_width(), screen.get_width() - pUp.image.get_width()),
@@ -431,7 +466,7 @@ def main(level):
                         pygame.mixer.music.stop()
                         pygame.mixer.music.unload()
 
-                        gameOver()
+                        gameOver(playerScore)
 
                 playerDistance += asteroidsGroup.sprites()[-1].add
 
@@ -457,6 +492,9 @@ def main(level):
                 screen.blit(p1HealthPrcnt.image, p1HealthPrcnt.rect)
                 screen.blit(scoreText1.image, scoreText1.rect)
                 screen.blit(scoreText2.image, scoreText2.rect)
+
+                screen.blit(hs1.image, hs1.rect)
+                screen.blit(hs2.image, hs2.rect)
 
                 screen.blit(distanceText1.image, distanceText1.rect)
                 screen.blit(distanceText2.image, distanceText2.rect)

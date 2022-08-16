@@ -63,6 +63,8 @@ class Player(pygame.sprite.Sprite):
 
                 if self.health <= 20:
                         self.image = self.destroyed_image
+                else:
+                        self.image = self.neutral_image
 
                 self.move(keys)
                 self.fire(keys)
