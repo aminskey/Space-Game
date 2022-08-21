@@ -32,10 +32,15 @@ levels = [
         Level(screen, 5, 5, 3, "Ring War", "backgrounds/bg-2.png", "songs/prototypes/bg.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/planet.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"]),
 	Level(screen, 5, 5, 3, "Alien Planet", "backgrounds/alien_planet.png", "songs/prototypes/alien_planet.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber", "rocket"]),
         Level(screen, 5, 2, 0.25, "Ocean Planet", "backgrounds/ocean_surface.png", "songs/prototypes/ocean.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png"], ["interceptor", "bomber", "rocket"]),
-        Level(screen, 5, 5, 3, "Atmosphere", "backgrounds/earth.png", "songs/prototypes/orbit.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "rocket"])
+        Level(screen, 5, 5, 3, "Atmosphere", "backgrounds/earth.png", "songs/prototypes/orbit.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "rocket"]),
+        Level(screen, 5, 5, 3, "Black hole", "backgrounds/black_hole.png", "songs/prototypes/black_hole.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber", "rocket"]),
+        Level(screen, 5, 5, 1, "Nebula", "backgrounds/nebula.png", "songs/prototypes/nebula.ogg", ["backgroundObjects/planet.png", "backgroundObjects/ship-1.png", "backgroundObjects/asteroid-0.png"], ["rocket"]),
+        Level(screen, 5, 5, 1, "Wormhole", "backgrounds/wormhole.png", "songs/prototypes/wormhole.ogg", ["backgroundObjects/ship-1.png", "backgroundObjects/ship-0.png", "backgroundObjects/asteroid-0.png"], ["interceptor", "rocket"])
 ]
 
 select_screen = ExtraClass.return_frames(screen, "backgrounds/levelSelect.gif")
+parade_screen = ExtraClass.return_frames(screen, "backgrounds/new_highscore.gif")
+parade_screen2 = ExtraClass.return_frames(screen, "backgrounds/new_highscore-2.gif")
 
 highscore = 60
 
@@ -63,6 +68,17 @@ def levelSelect(list):
         preview = Window((screen.get_width()//5, screen.get_height()//5))
         preview.rect.center = (screen.get_rect().centerx, screen.get_height()//3)
 
+        prevMission = Window((preview.image.get_width() - 20, preview.image.get_height() - 20))
+        nextMission = Window((preview.image.get_width() - 20, preview.image.get_height() - 20))
+
+        prevMission.image.set_alpha(100)
+        nextMission.image.set_alpha(100)
+
+        prevMission.rect.centerx = preview.rect.midleft[0] - 50 - screen.get_width()//5
+        nextMission.rect.centerx = preview.rect.midright[0] + 50 + screen.get_width()//5
+
+        prevMission.rect.centery = nextMission.rect.centery = screen.get_height()//3
+
         dscWin = Window((screen.get_width(), screen.get_height()//3))
         dscWin.rect.bottomleft = (0, screen.get_height())
 
@@ -70,6 +86,7 @@ def levelSelect(list):
         dscbg = pygame.transform.scale(pygame.image.load("misc/window.png"), dscWin.image.get_size())
 
         levelFont = pygame.font.Font("fonts/pixelart.ttf", 50)
+        prevFont = pygame.font.Font("fonts/pixelart.ttf", 40)
         header = pygame.font.Font("fonts/ka1.ttf", 100)
         description = pygame.font.Font("fonts/vga_437.ttf", 25)
 
@@ -119,8 +136,22 @@ def levelSelect(list):
 
                 level = list[itr]
 
+                prevLevel = list[itr - 1]
+                if (itr + 1) > len(list) - 1:
+                        nextLevel = list[0]
+                else:
+                        nextLevel = list[itr + 1]
+
                 levelTitle = TextClass.Text(level.name, levelFont, (255, 255, 255))
                 levelTitle.rect.midtop = preview.rect.midbottom
+
+                prevTitle = TextClass.Text(prevLevel.name, prevFont, (255, 255, 255))
+                prevTitle.rect.midtop = prevMission.rect.midbottom
+                prevTitle.image.set_alpha(100)
+
+                nextTitle = TextClass.Text(nextLevel.name, prevFont, (255, 255, 255))
+                nextTitle.rect.midtop = nextMission.rect.midbottom
+                nextTitle.image.set_alpha(100)
 
                 tmptext = TextClass.Text(" * Current Level: " + level.name + ".....", description, (255, 255, 255))
                 tmptext.rect.topleft = (10, 10)
@@ -148,6 +179,12 @@ def levelSelect(list):
                 currentBG = pygame.transform.scale(currentBG, preview.image.get_size())
                 preview.image.blit(currentBG, (0, 0))
 
+                prevBG = pygame.transform.scale(prevLevel.background, prevMission.image.get_size())
+                nextBG = pygame.transform.scale(nextLevel.background, prevMission.image.get_size())
+
+                prevMission.image.blit(prevBG, (0, 0))
+                nextMission.image.blit(nextBG, (0, 0))
+
                 if gifItr > len(select_screen) - 1:
                         gifItr = 0
 
@@ -155,10 +192,15 @@ def levelSelect(list):
 
                 screen.blit(bg, (0, 0))
                 screen.blit(shade.image, shade.rect)
+                screen.blit(prevMission.image, prevMission.rect)
+                screen.blit(nextMission.image, nextMission.rect)
                 screen.blit(preview.image, preview.rect)
+
                 screen.blit(dscWin.image, dscWin.rect)
                 screen.blit(levelTitle.image, levelTitle.rect)
                 screen.blit(title.image, title.rect)
+                screen.blit(prevTitle.image, prevTitle.rect)
+                screen.blit(nextTitle.image, nextTitle.rect)
 
                 scanlineGroup.draw(screen)
 
@@ -293,15 +335,69 @@ def startScreen():
                 pygame.display.update()
                 clock.tick(FPS)
 def gameOver(playerScore):
+        pygame.mixer.music.load("songs/prototypes/gameOver-1.ogg")
+        gameOverFile = "misc/gameOver-1.png"
 
-        if playerScore < highscore:
-                pygame.mixer.music.load("songs/prototypes/gameOver-1.ogg")
-                color = (50, 50, 50)
-                gameOverFile = "misc/gameOver-1.png"
-        else:
+        pygame.mixer.music.play(-1)
+
+        logo = pygame.image.load(gameOverFile)
+        logoRect = logo.get_rect()
+        logoRect.center = (screen.get_width() // 2, screen.get_height() // 2)
+        alphaVal = 0
+
+        for item in healthbarGroup.sprites():
+                item.remove(healthbarGroup)
+                item.kill()
+
+        for item in playersGroup.sprites():
+                item.remove(playersGroup)
+                item.kill()
+
+        for item in enemyGroup.sprites():
+                item.remove(enemyGroup)
+                item.kill()
+
+        for item in asteroidsGroup.sprites():
+                item.remove(asteroidsGroup)
+                item.kill()
+
+        while True:
+                for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                                pygame.quit()
+                                exit()
+                        if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_RETURN:
+                                        pygame.mixer.music.stop()
+                                        pygame.mixer.music.unload()
+
+                                        if playerScore >= highscore:
+                                                parade(playerScore)
+
+                                        startScreen()
+                                        exit()
+                        break
+
+                if alphaVal < 255:
+                        alphaVal += 1
+
+                logo.set_alpha(alphaVal)
+                screen.blit(logo, logoRect)
+
+                pygame.display.flip()
+                clock.tick(30)
+
+def parade(playerScore):
+
+        if playerScore >= 500:
                 pygame.mixer.music.load("songs/prototypes/gameOver-2.ogg")
-                color = (150, 150, 255)
-                gameOverFile = "misc/gameOver-2.png"
+                anim=parade_screen
+        else:
+                pygame.mixer.music.load("songs/prototypes/gameOver-3.ogg")
+                anim=parade_screen2
+
+        color = (150, 150, 255)
+        gameOverFile = "misc/gameOver-2.png"
 
         pygame.mixer.music.play(-1)
 
@@ -317,6 +413,8 @@ def gameOver(playerScore):
 
         scoreText.rect.midtop = logoRect.midbottom
         recText.rect.midtop = scoreText.rect.midbottom
+
+        index = 0
 
         for item in healthbarGroup.sprites():
                 item.remove(healthbarGroup)
@@ -349,6 +447,14 @@ def gameOver(playerScore):
                                         exit()
                         break
 
+                index += 1
+                if index >= len(anim) - 1:
+                        index = 0
+
+                bg = anim[index]
+                bg.set_alpha(alphaVal*2)
+
+
                 if alphaVal < 255:
                         alphaVal += 1
 
@@ -356,13 +462,15 @@ def gameOver(playerScore):
                 scoreText.image.set_alpha(alphaVal)
                 recText.image.set_alpha(alphaVal)
 
+                screen.blit(bg, (0, 0))
                 screen.blit(logo, logoRect)
                 screen.blit(scoreText.image, scoreText.rect)
                 screen.blit(recText.image, recText.rect)
 
+                scanlineGroup.draw(screen)
+
                 pygame.display.flip()
                 clock.tick(30)
-
 
 def main(level):
 
@@ -439,7 +547,7 @@ def main(level):
                         tmpAst.rect.center = (random.randint(tmpAst.image.get_width(), screen.get_width() - tmpAst.image.get_width()), random.randint(0, screen.get_height()//2))
                         asteroidsGroup.add(tmpAst)
 
-                if playerDistance % 500 == 0 and playerDistance != 0:
+                if playerDistance % 1000 == 0 and playerDistance != 0:
                         pUp = Powerups.OneUp(screen)
                         pUp.rect.center = (
                                 random.randint(pUp.image.get_width(), screen.get_width() - pUp.image.get_width()),

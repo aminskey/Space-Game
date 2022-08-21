@@ -3,7 +3,7 @@ import FireClass
 
 from pygame.locals import *
 from PublicVar import *
-from random import randint
+from random import randint, choice
 from time import sleep
 
 class Player(pygame.sprite.Sprite):
@@ -88,7 +88,7 @@ class EnemyShip(pygame.sprite.Sprite):
                 self.canFire = True
         def dead(self):
                 tmpSound = pygame.mixer.Sound("sounds/explosion.mp3")
-                tmpSound.set_volume(0.5)
+                tmpSound.set_volume(0.25)
                 tmpSound.play()
 
                 self.kill()
