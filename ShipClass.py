@@ -5,13 +5,14 @@ from pygame.locals import *
 from PublicVar import *
 from random import randint, choice
 from time import sleep
+from os import listdir
 
 class Player(pygame.sprite.Sprite):
         def __init__(self, mainWindow, model="quake"):
                 super().__init__()
 
-                self.neutral_image = pygame.image.load("ships/player_ships/model_" + model + "/" + model + "-1.png")
-                self.destroyed_image = pygame.image.load("ships/player_ships/model_" + model + "/" + model + "-2.png")
+                self.neutral_image = pygame.image.load("ships/player_ships/" + model + "/" + model + "-1.png")
+                self.destroyed_image = pygame.image.load("ships/player_ships/" + model + "/" + model + "-2.png")
 
                 self.image = self.neutral_image
                 self.rect = self.image.get_rect()

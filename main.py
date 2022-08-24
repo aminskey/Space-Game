@@ -1,5 +1,4 @@
 import pygame
-
 import ShipClass
 import TextClass
 import random
@@ -13,19 +12,27 @@ from Healthbar import Healthbar
 from Asteroids import Asteroid
 from LevelsClass import Level
 from windowClass import Window
+from time import sleep
 
 pygame.init()
 
 name = "Space Raiders"
-subtitle = "Alpha 1.5"
+subtitle = "Alpha 1.5.3"
 
 screen = pygame.display.set_mode((1100, 800), FULLSCREEN | SCALED)
 pygame.display.set_caption(name + " - " + subtitle)
 
-FPS = 60
-clock = pygame.time.Clock()
+load_screen = pygame.transform.scale(pygame.image.load("backgrounds/loading.png"), screen.get_size())
 
 ExtraClass.scanlineGen(1, screen)
+
+screen.blit(load_screen, (0, 0))
+scanlineGroup.draw(screen)
+pygame.display.update()
+
+
+FPS = 60
+clock = pygame.time.Clock()
 
 levels = [
         Level(screen, 5, 2, 0.25, "Sky High", "backgrounds/bg-3.png", "songs/prototypes/bg-2.ogg", ["backgroundObjects/cloud-1.png", "backgroundObjects/cloud-2.png", "backgroundObjects/airship.png"], ["rocket"]),
@@ -35,7 +42,15 @@ levels = [
         Level(screen, 5, 5, 3, "Atmosphere", "backgrounds/earth.png", "songs/prototypes/orbit.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "rocket"]),
         Level(screen, 5, 5, 3, "Black hole", "backgrounds/black_hole.png", "songs/prototypes/black_hole.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber", "rocket"]),
         Level(screen, 5, 5, 1, "Nebula", "backgrounds/nebula.png", "songs/prototypes/nebula.ogg", ["backgroundObjects/planet.png", "backgroundObjects/ship-1.png", "backgroundObjects/asteroid-0.png"], ["rocket"]),
-        Level(screen, 5, 5, 1, "Wormhole", "backgrounds/wormhole.png", "songs/prototypes/wormhole.ogg", ["backgroundObjects/ship-1.png", "backgroundObjects/ship-0.png", "backgroundObjects/asteroid-0.png"], ["interceptor", "rocket"])
+        Level(screen, 5, 5, 1, "Wormhole", "backgrounds/wormhole.png", "songs/prototypes/wormhole.ogg", ["backgroundObjects/ship-1.png", "backgroundObjects/ship-0.png", "backgroundObjects/asteroid-0.png"], ["interceptor", "rocket"]),
+        Level(screen, 5, 5, 3, "Pluto", "backgrounds/pluto.png", "songs/prototypes/pluto.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/planet.png", "backgroundObjects/ship-1.png"], ["interceptor", "bomber"]),
+        Level(screen, 5, 5, 3, "Neptune", "backgrounds/neptune.png", "songs/prototypes/neptune.ogg", ["backgroundObjects/asteroid-0.png", "backgroundObjects/ship-1.png"], ["rocket", "bomber"])
+]
+
+player_ship_models = [
+        "quake",
+        "rocket",
+        "hunter"
 ]
 
 select_screen = ExtraClass.return_frames(screen, "backgrounds/levelSelect.gif")
@@ -62,8 +77,6 @@ def levelSelect(list):
         shade.image.set_alpha(150)
 
         itr = len(list)//2 - 1
-
-        gifItr = 0
 
         preview = Window((screen.get_width()//5, screen.get_height()//5))
         preview.rect.center = (screen.get_rect().centerx, screen.get_height()//3)
@@ -93,6 +106,12 @@ def levelSelect(list):
         title = TextClass.Text("Select  Level", header, (100, 150, 100))
         title.rect.midtop = screen.get_rect().midtop
 
+        title2 = TextClass.Text("Select   Ship", header, (100, 150, 100))
+        title2.rect.midtop = screen.get_rect().midtop
+
+        levelSelected = False
+
+        mainLevel = None
 
         textLines = []
         global lines
@@ -113,8 +132,10 @@ def levelSelect(list):
         ]
 
         msgItr = 0
+        gifItr = 0
+        shipItr = 0
 
-        while True:
+        while not levelSelected:
                 for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                                 pygame.quit()
@@ -127,7 +148,8 @@ def levelSelect(list):
                                         itr += 1
                                         break
                                 if event.key == pygame.K_RETURN:
-                                        main(list[itr])
+                                        mainLevel = list[itr]
+                                        levelSelected = True
                                         break
                 if itr < 0:
                         itr = len(list) - 1
@@ -209,6 +231,65 @@ def levelSelect(list):
 
                 gifItr += 1
                 msgItr += 0.01
+
+        while True:
+                for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                                pygame.quit()
+                                exit()
+                        if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_LEFT:
+                                        shipItr -= 1
+                                        break
+                                if event.key == pygame.K_RIGHT:
+                                        shipItr += 1
+                                        break
+                                if event.key == pygame.K_RETURN:
+                                        main(mainLevel, player_ship_models[shipItr])
+                                        break
+
+                if shipItr < 0:
+                        shipItr = len(player_ship_models) - 1
+                if shipItr > len(player_ship_models) - 1:
+                        shipItr = 0
+
+                currentShip = pygame.image.load("ships/player_ships/" + player_ship_models[shipItr] + "/" + player_ship_models[shipItr] + "-1.png")
+                shipRect = currentShip.get_rect()
+                shipRect.center = screen.get_rect().center
+
+                prevShip = pygame.image.load("ships/player_ships/" + player_ship_models[shipItr - 1] + "/" + player_ship_models[shipItr - 1] + "-1.png")
+                prevShip.set_alpha(100)
+
+                prevRect = prevShip.get_rect()
+                prevRect.midright = shipRect.midleft
+
+
+
+                shipName = TextClass.Text(player_ship_models[shipItr], prevFont, (255, 255, 255))
+                shipName.rect.midtop = shipRect.midbottom
+
+                prevName = TextClass.Text(player_ship_models[shipItr - 1], prevFont, (255, 255, 255))
+                prevName.image.set_alpha(100)
+                prevName.rect.midtop = prevRect.midbottom
+
+                if gifItr > len(select_screen) - 1:
+                        gifItr = 0
+
+                bg = select_screen[gifItr]
+
+                screen.blit(bg, (0, 0))
+                screen.blit(currentShip, shipRect)
+                screen.blit(title2.image, title2.rect)
+                screen.blit(shipName.image, shipName.rect)
+                screen.blit(prevShip, prevRect)
+                screen.blit(prevName.image, prevName.rect)
+
+                scanlineGroup.draw(screen)
+
+                pygame.display.update()
+                clock.tick(30)
+
+                gifItr += 1
 
 def startScreen():
         pygame.mixer.music.load("songs/prototypes/startups/startup.ogg")
@@ -389,7 +470,7 @@ def gameOver(playerScore):
 
 def parade(playerScore):
 
-        if playerScore >= 500:
+        if playerScore >= 1000:
                 pygame.mixer.music.load("songs/prototypes/gameOver-2.ogg")
                 anim=parade_screen
         else:
@@ -472,7 +553,7 @@ def parade(playerScore):
                 pygame.display.flip()
                 clock.tick(30)
 
-def main(level):
+def main(level, shipModel):
 
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
@@ -480,7 +561,7 @@ def main(level):
         pygame.mixer.music.load(level.bgSong)
         pygame.mixer.music.play(-1)
 
-        p1 = Player(screen)
+        p1 = Player(screen, shipModel)
         p1.rect.midbottom = (screen.get_rect().midbottom[0], screen.get_rect().midbottom[1] - 100)
 
         playersGroup.add(p1)
