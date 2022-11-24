@@ -295,6 +295,8 @@ def startScreen():
         pygame.mixer.music.load("songs/prototypes/startups/startup.ogg")
         pygame.mixer.music.play(-1)
 
+        global screen
+
         asteroidsGroup1 = pygame.sprite.Group()
         asteroidsGroup2 = pygame.sprite.Group()
 
@@ -344,7 +346,6 @@ def startScreen():
         header = pygame.font.Font("fonts/pixelart.ttf", 75)
         subFont = pygame.font.Font("fonts/pixelart.ttf", 30)
         option = pygame.font.Font("fonts/pixelart.ttf", 40)
-
 
 
         title = TextClass.Text(name, header, (255, 255, 255), (screen.get_width()//2, screen.get_height()//3))
@@ -470,7 +471,7 @@ def gameOver(playerScore):
 
 def parade(playerScore):
 
-        if playerScore >= 1000:
+        if playerScore >= 500:
                 pygame.mixer.music.load("songs/prototypes/gameOver-2.ogg")
                 anim=parade_screen
         else:
